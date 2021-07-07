@@ -32,6 +32,7 @@ module.exports = class mcgame extends EventEmitter{
         this.socket=new Socket();
         this.connected=false;
         this.chatCallbacks=chatCallbacks;
+        this.loadedOnce = false;
         /**
          * @type {Map}
          */
@@ -46,7 +47,8 @@ module.exports = class mcgame extends EventEmitter{
     serverName;
     guild;
     logChannel;
-    serverList
+    serverList;
+    loadedOnce;
 
     socket;
     /**@type {Boolean} Whether the Minecraft server is connected or not*/
@@ -104,19 +106,23 @@ module.exports = class mcgame extends EventEmitter{
                 if(packet.packet=="event"){
                     if(packet.event=="No player was found") return;
                     if(packet.event.endsWith("joined the game")){
-                        this.camellib.client.channels.cache.get(this.channel).send("**"+packet.event+"**");
+                        this.camellib.client.channels.cache.get(this.channel).send("**"+packet.event+"**").catch(()=>{});
                         return;
                     }
                     if(packet.event.endsWith("left the game")){
-                        this.camellib.client.channels.cache.get(this.channel).send("**"+packet.event+"**");
+                        this.camellib.client.channels.cache.get(this.channel).send("**"+packet.event+"**").catch(()=>{});
                         return;
                     }
+                    try{
+                        this.camellib.client.channels.cache.get(this.logChannel).send(packet.event).catch(()=>{})
+                        return;
+                    }catch(err){
+                        
+                    }
                     
-                    this.camellib.client.channels.cache.get(this.logChannel).send(packet.event)
-                    return;
                 }
                 if(packet.packet=="death"){
-                    this.camellib.client.channels.cache.get(this.channel).send("**"+packet.message+"**");
+                    this.camellib.client.channels.cache.get(this.channel).send("**"+packet.message+"**").catch(()=>{});
                 }
                 if(packet.packet=="command"){
                     let args = packet.command.replace('/','').split(' ')
@@ -130,82 +136,91 @@ module.exports = class mcgame extends EventEmitter{
         })
         this.socket.on('close',()=>{
             this.connected = false
-            this.camellib.client.channels.cache.get(this.logChannel).send("Server Disconnected")
+            try{
+                this.camellib.client.channels.cache.get(this.logChannel).send("Server Disconnected").catch(()=>{})
+            }catch(err){
+
+            }
             this.socket.removeAllListeners();
         })
         this.socket.on('error',()=>{
             this.connected = false
-            this.camellib.client.channels.cache.get(this.logChannel).send("Server error, disconnected")
+            this.camellib.client.channels.cache.get(this.logChannel).send("Server error, disconnected").catch(()=>{})
             this.socket.removeAllListeners();
         })
-        this.camellib.client.on('message',message=>{
-            if(!this.connected) return;
-            if(message.author==this.camellib.client.user) return;
-            if(message.channel.id==this.channel){
-                if(message.content.length>0){
-                    this.sendChat(message.content,message.author.username)
+
+        if(!this.loadedOnce){
+            this.camellib.client.on('message',message=>{
+                if(!this.connected) return;
+                if(message.author==this.camellib.client.user) return;
+                if(message.channel.id==this.channel){
+                    if(message.content.length>0){
+                        this.sendChat(message.content,message.author.username)
+                        return;
+                    }
+                    if(message.attachments.size>0){
+                        this.sendCommand("tellraw @a "+JSON.stringify({
+                            "text":message.author.username+" has sent an image. You can see it in Discord.",
+                            "italic":true,
+                            "color":"gray"
+                        }))
+                    }
+                }
+                if(message.channel.id==this.logChannel&&!message.author.bot){
+                    this.sendCommand(message.content)
                     return;
                 }
-                if(message.attachments.size>0){
-                    this.sendCommand("tellraw @a "+JSON.stringify({
-                        "text":message.author.username+" has sent an image. You can see it in Discord.",
-                        "italic":true,
-                        "color":"gray"
-                    }))
-                }
-            }
-            if(message.channel.id==this.logChannel&&!message.author.bot){
-                this.sendCommand(message.content)
-                return;
-            }
-        })
-
-        this.camellib.on('pluginDisabled',(guildid,plugin)=>{
-            this.camellib.mappedCommands.forEach(command=>{
-                if(command.plugin!=plugin) return;
-                this.socket.write(JSON.stringify({
-                    "packet":"unregister",
-                    "command":command.manifest.name
-                })+"\n")
             })
-        });
-        
-
-        this.camellib.on('pluginEnabled',(guildid,plugin)=>{
-            if(!this.camellib.database.get(guildid).hasOwnProperty("minecraft")){
-                this.camellib.database.get(guildid)["minecraft"]={
-                    "servers":[]
-                }
-            }
-            this.camellib.mappedCommands.forEach(command=>{
-                if(command.plugin!=plugin) return;
-                if(this.camellib.database.get(this.guild).enabledPlugins.includes(command.plugin)&&command.manifest.source.includes('minecraft')){
-                    let toSend = {
-                        'name':command.manifest.name,
-                        'argument' : {
-                            'type': 'brigadier:literal'
-                        },
-                        "children" : []
-                    }
-                    command.manifest.options.forEach(option=>{
-                        let toType = DiscordToBrigadier(option.type);
-                        if (toType=='unknown') return;
-                        let toPush = {
-                            'name' : option.name,
-                            "argument": {
-                                "type": toType
-                            },
-                            "executes" : "com.jkcoxson.camelmod.CommandReg::camelCommand"
-                        }
-                        toSend.children.push(toPush)
-                    });
+    
+            this.camellib.on('pluginDisabled',(guildid,plugin)=>{
+                this.camellib.mappedCommands.forEach(command=>{
+                    if(command.plugin!=plugin) return;
                     this.socket.write(JSON.stringify({
-                        "packet":"register",
-                        "command":toSend
+                        "packet":"unregister",
+                        "command":command.manifest.name
                     })+"\n")
+                })
+            });
+            
+    
+            this.camellib.on('pluginEnabled',(guildid,plugin)=>{
+                if(!this.camellib.database.get(guildid).hasOwnProperty("minecraft")){
+                    this.camellib.database.get(guildid)["minecraft"]={
+                        "servers":[]
+                    }
                 }
-            })
-        });
+                this.camellib.mappedCommands.forEach(command=>{
+                    if(command.plugin!=plugin) return;
+                    if(this.camellib.database.get(this.guild).enabledPlugins.includes(command.plugin)&&command.manifest.source.includes('minecraft')){
+                        let toSend = {
+                            'name':command.manifest.name,
+                            'argument' : {
+                                'type': 'brigadier:literal'
+                            },
+                            "children" : []
+                        }
+                        command.manifest.options.forEach(option=>{
+                            let toType = DiscordToBrigadier(option.type);
+                            if (toType=='unknown') return;
+                            let toPush = {
+                                'name' : option.name,
+                                "argument": {
+                                    "type": toType
+                                },
+                                "executes" : "com.jkcoxson.camelmod.CommandReg::camelCommand"
+                            }
+                            toSend.children.push(toPush)
+                        });
+                        this.socket.write(JSON.stringify({
+                            "packet":"register",
+                            "command":toSend
+                        })+"\n")
+                    }
+                })
+            });
+            this.loadedOnce = true;
+        }
+        
         
         
 

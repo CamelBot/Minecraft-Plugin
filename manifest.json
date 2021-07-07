@@ -17,6 +17,31 @@
                 "description": "Name of the Minecraft server",
                 "required": true
             }]
+        },
+        {
+            "name":"deleteserver",
+            "description":"Removes a Minecraft server from your Discord server",
+            "class":"main.js",
+            "method":"deleteServer",
+            "source":[
+                "discord"
+            ],
+            "options":[{
+                "name": "name",
+                "type": "STRING",
+                "description": "Name of the Minecraft server",
+                "required": true
+            }]
+        },
+        {
+            "name":"serverstatus",
+            "description":"Lists all servers and if they are connected.",
+            "class":"main.js",
+            "method":"serverStatus",
+            "source":[
+                "discord"
+            ],
+            "options":[]
         }
     ]
 }
