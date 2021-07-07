@@ -133,6 +133,14 @@ module.exports = class mineplug extends EventEmitter {
      * @param {commandRunnerJs} commandRunner
      */
     deleteServer(commandRunner){
+        if(!commandRunner.interaction.member.permissions.has('ADMINISTRATOR')){
+            let toSend = new Discord.MessageEmbed()
+                .setColor("#FF0000")
+                .setTitle("Error")
+                .addField("Permission","You do not have administrator permission to remove a Mineraft server")
+            commandRunner.interaction.reply({embeds:[toSend],ephemeral:true});
+            return;
+        }
         let toSplice = undefined;
         camellib.database.get(commandRunner.interaction.guild.id).minecraft.servers.forEach(element=>{
             if(element.name==commandRunner.interaction.options.get("name").value){
@@ -151,7 +159,7 @@ module.exports = class mineplug extends EventEmitter {
         camellib.saveDatabase();
         let game
         mcServers.forEach(element=>{
-            if(element.serverName==commandRunner.interaction.options.get('name').value){
+            if(element.serverName==commandRunner.interaction.options.get('name').value&&element.guild==commandRunner.interaction.guild.id){
                 game = element;
             }
         })
@@ -188,6 +196,116 @@ module.exports = class mineplug extends EventEmitter {
             toSend.addField("Error","You don't seem to have any servers. Add one now with ``/addserver``.")
         }
         commandRunner.interaction.reply({embeds:[toSend]});
+    }
+
+    /**
+     * 
+     * @param {commandRunnerJs} commandRunner 
+     */
+    serverchat(commandRunner){
+        if(!commandRunner.interaction.member.permissions.has('ADMINISTRATOR')){
+            let toSend = new Discord.MessageEmbed()
+                .setColor("#FF0000")
+                .setTitle("Error")
+                .addField("Permission","You do not have administrator permission to set Minecraft channels")
+            commandRunner.interaction.reply({embeds:[toSend],ephemeral:true});
+            return;
+            
+        }
+        let game = undefined
+        mcServers.forEach(element=>{
+            if(element.serverName==commandRunner.interaction.options.get('name').value&&element.guild==commandRunner.interaction.guild.id){
+                game = element;
+            }
+        })
+        let database = undefined;
+        camellib.database.get(commandRunner.interaction.guild.id).minecraft.servers.forEach(element=>{
+            if(element.name==commandRunner.interaction.options.get('name').value){
+                database=element;
+            }
+        })
+        if(game==undefined||database==undefined){
+            let toSend = new Discord.MessageEmbed()
+                .setColor("#FF0000")
+                .setTitle("Error")
+                .addField("Not found","A server couldn't be found by that name, run ``/serverstatus`` to see all servers.");
+            commandRunner.interaction.reply({embeds:[toSend]});
+            return;
+        }
+        if(commandRunner.interaction.options.has("channel")){
+            game.channel = commandRunner.interaction.options.get("channel").channel.id;
+            database.channel = commandRunner.interaction.options.get("channel").channel.id;
+            let toSend = new Discord.MessageEmbed()
+                .setColor("#008000")
+                .setTitle("Success")
+                .addField("Success","Chat will be sent to #" + commandRunner.interaction.options.get("channel").channel.name+" now.");
+            commandRunner.interaction.reply({embeds:[toSend]});
+        }else{
+            game.channel = commandRunner.interaction.channel.id;
+            database.channel = commandRunner.interaction.channel.id
+            let toSend = new Discord.MessageEmbed()
+                .setColor("#008000")
+                .setTitle("Success")
+                .addField("Success","Chat will be sent here now.");
+            commandRunner.interaction.reply({embeds:[toSend]});
+        }
+        camellib.saveDatabase();
+
+    }
+
+
+    /**
+     * 
+     * @param {commandRunnerJs} commandRunner 
+     */
+    serverlog(commandRunner){
+        if(!commandRunner.interaction.member.permissions.has('ADMINISTRATOR')){
+            let toSend = new Discord.MessageEmbed()
+                .setColor("#FF0000")
+                .setTitle("Error")
+                .addField("Permission","You do not have administrator permission to set Minecraft channels")
+            commandRunner.interaction.reply({embeds:[toSend],ephemeral:true});
+            return;
+            
+        }
+        let game = undefined
+        mcServers.forEach(element=>{
+            if(element.serverName==commandRunner.interaction.options.get('name').value&&element.guild==commandRunner.interaction.guild.id){
+                game = element;
+            }
+        })
+        let database = undefined;
+        camellib.database.get(commandRunner.interaction.guild.id).minecraft.servers.forEach(element=>{
+            if(element.name==commandRunner.interaction.options.get('name').value){
+                database=element;
+            }
+        })
+        if(game==undefined||database==undefined){
+            let toSend = new Discord.MessageEmbed()
+                .setColor("#FF0000")
+                .setTitle("Error")
+                .addField("Not found","A server couldn't be found by that name, run ``/serverstatus`` to see all servers.");
+            commandRunner.interaction.reply({embeds:[toSend]});
+            return;
+        }
+        if(commandRunner.interaction.options.has("channel")){
+            game.logChannel = commandRunner.interaction.options.get("channel").channel.id;
+            database.log = commandRunner.interaction.options.get("channel").channel.id;
+            let toSend = new Discord.MessageEmbed()
+                .setColor("#008000")
+                .setTitle("Success")
+                .addField("Success","Log messages will be sent to " + commandRunner.interaction.options.get("channel").channel.name+" now.");
+            commandRunner.interaction.reply({embeds:[toSend]});
+        }else{
+            game.logChannel = commandRunner.interaction.channel.id;
+            database.log = commandRunner.interaction.channel.id
+            let toSend = new Discord.MessageEmbed()
+                .setColor("#008000")
+                .setTitle("Success")
+                .addField("Success","Log messages will be sent here now.");
+            commandRunner.interaction.reply({embeds:[toSend]});
+        }
+        camellib.saveDatabase();
     }
 
 }
