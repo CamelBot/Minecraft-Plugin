@@ -9,12 +9,14 @@ The official Minecraft plugin for extending CamelBot's plugin system to your fav
 ## For Devs
 This plugin taps directly into the plugin's general manifest.
 
-Add 'minecraft' to the source of each command you want syncronized, add a 'minecraft' key to the root of the JSON. For example, ```"minecraft":{
-        "chat":{
-            "class":"main.js",
-            "method":"onChat"
-        }
-    }```
+Add 'minecraft' to the source of each command you want synchronized, add a 'minecraft' key to the root of the JSON. For example:
+```json
+"minecraft": {
+    "chat": {
+        "class": "main.js",
+        "method": "onChat"
+    }
+}
 For more information, check the [example plugin](https://github.com/CamelBot/Example-Plugin)
 
 ## License
