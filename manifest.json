@@ -1,0 +1,22 @@
+{
+    "name":"minecraft",
+    "description":"Official Minecraft plugin for linking chat and bootstrapping commands.",
+    "class":"main.js",
+    "commands":[
+        {
+            "name":"addserver",
+            "description":"Add a Minecraft server to your Discord server",
+            "class":"main.js",
+            "method":"addServer",
+            "source":[
+                "discord"
+            ],
+            "options":[{
+                "name": "name",
+                "type": "STRING",
+                "description": "Name of the Minecraft server",
+                "required": true
+            }]
+        }
+    ]
+}
