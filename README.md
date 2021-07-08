@@ -17,6 +17,8 @@ Add 'minecraft' to the source of each command you want synchronized, add a 'mine
         "method": "onChat"
     }
 }
+```
+
 For more information, check the [example plugin](https://github.com/CamelBot/Example-Plugin)
 
 ## License
