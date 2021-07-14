@@ -17,6 +17,77 @@
                 "description": "Name of the Minecraft server",
                 "required": true
             }]
+        },
+        {
+            "name":"deleteserver",
+            "description":"Removes a Minecraft server from your Discord server",
+            "class":"main.js",
+            "method":"deleteServer",
+            "source":[
+                "discord"
+            ],
+            "options":[{
+                "name": "name",
+                "type": "STRING",
+                "description": "Name of the Minecraft server",
+                "required": true
+            }]
+        },
+        {
+            "name":"serverstatus",
+            "description":"Lists all servers and if they are connected.",
+            "class":"main.js",
+            "method":"serverStatus",
+            "source":[
+                "discord"
+            ],
+            "options":[]
+        },
+        {
+            "name":"serverchat",
+            "description":"Sets the specified channel as the chat channel for a Minecraft server",
+            "class":"main.js",
+            "method":"serverchat",
+            "source":[
+                "discord"
+            ],
+            "options":[
+                {
+                "name": "name",
+                "type": "STRING",
+                "description": "Name of the Minecraft server",
+                "required": true
+                },
+                {
+                    "name": "channel",
+                    "type": "CHANNEL",
+                    "description": "Channel to send the messages to",
+                    "required": false
+                }
+            ]
+        },
+        {
+            "name":"serverlog",
+            "description":"Sets the specified channel as the log channel for a Minecraft server",
+            "class":"main.js",
+            "method":"serverlog",
+            "source":[
+                "discord"
+            ],
+            "options":[
+                {
+                "name": "name",
+                "type": "STRING",
+                "description": "Name of the Minecraft server",
+                "required": true
+                },
+                {
+                    "name": "channel",
+                    "type": "CHANNEL",
+                    "description": "Channel to send the messages to",
+                    "required": false
+                }
+            ]
         }
     ]
 }
