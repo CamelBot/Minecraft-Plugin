@@ -5,10 +5,12 @@ const { Socket } = require('net');
 const chatMessage = require('./chatMessage');
 const commandRunnerJs = require('./mcCommandRunner');
 
+
 /**@type {import('../../camelLib')} */
 let externalCamellib;
 
 module.exports = class mcgame extends EventEmitter {
+
     /**
      * 
      * @param {Socket} client 
@@ -34,6 +36,7 @@ module.exports = class mcgame extends EventEmitter {
         this.loadedOnce = false;
         this.lastSent = new Map();
         externalCamellib = camellib;
+
         /**
          * @type {Map}
          */
@@ -61,6 +64,7 @@ module.exports = class mcgame extends EventEmitter {
     /**@type {Boolean} Whether the server has been connected before or not */
     loadedOnce;
     /**@type {Socket} The socket that the server is connected through */
+
     socket;
     /**@type {Boolean} Whether the Minecraft server is connected or not*/
     connected;
@@ -111,6 +115,7 @@ module.exports = class mcgame extends EventEmitter {
                             } else {
                                 if (tempObject.sendToDiscord) this.camellib.client.channels.cache.get(this.channel).send('__**' + packet.sender + '**__\n' + message);
                                 this.lastSent.set(this.channel, packet.sender);
+
                             }
                         } else {
                             this.lastSent.set(this.channel, packet.sender);
@@ -148,6 +153,7 @@ module.exports = class mcgame extends EventEmitter {
                 if (packet.packet == 'death') {
                     this.camellib.client.channels.cache.get(this.channel).send('**' + packet.message + '**').catch(() => { });
                     this.lastSent.set(this.channel, '[discord]');
+
                 }
                 if (packet.packet == 'command') {
                     let args = packet.command.replace('/', '').split(' ');
@@ -310,6 +316,7 @@ module.exports = class mcgame extends EventEmitter {
             this.loadedOnce = true;
 
         }
+
 
 
 
