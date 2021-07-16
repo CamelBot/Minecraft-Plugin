@@ -5,10 +5,12 @@ const { Socket } = require('net');
 const chatMessage = require('./chatMessage');
 const commandRunnerJs = require('./mcCommandRunner');
 
+
 /**@type {import('../../camelLib')} */
 let externalCamellib;
 
 module.exports = class mcgame extends EventEmitter {
+
     /**
      * 
      * @param {Socket} client 
@@ -34,6 +36,7 @@ module.exports = class mcgame extends EventEmitter {
         this.loadedOnce = false;
         this.lastSent = new Map();
         externalCamellib = camellib;
+
         /**
          * @type {Map}
          */
@@ -61,6 +64,7 @@ module.exports = class mcgame extends EventEmitter {
     /**@type {Boolean} Whether the server has been connected before or not */
     loadedOnce;
     /**@type {Socket} The socket that the server is connected through */
+
     socket;
     /**@type {Boolean} Whether the Minecraft server is connected or not*/
     connected;
@@ -111,6 +115,7 @@ module.exports = class mcgame extends EventEmitter {
                             } else {
                                 if (tempObject.sendToDiscord) this.camellib.client.channels.cache.get(this.channel).send('__**' + packet.sender + '**__\n' + message);
                                 this.lastSent.set(this.channel, packet.sender);
+
                             }
                         } else {
                             this.lastSent.set(this.channel, packet.sender);
@@ -148,6 +153,7 @@ module.exports = class mcgame extends EventEmitter {
                 if (packet.packet == 'death') {
                     this.camellib.client.channels.cache.get(this.channel).send('**' + packet.message + '**').catch(() => { });
                     this.lastSent.set(this.channel, '[discord]');
+
                 }
                 if (packet.packet == 'command') {
                     let args = packet.command.replace('/', '').split(' ');
@@ -192,15 +198,23 @@ module.exports = class mcgame extends EventEmitter {
             this.camellib.client.channels.cache.get(this.logChannel).send('Server error, disconnected').catch(() => { });
             this.socket.removeAllListeners();
         });
+<<<<<<< HEAD
 
+=======
+>>>>>>> 238d88f7122d462468e9e6fc4448d5caa65220a8
         let intervalId = setInterval(() => {
             this.socket.write(JSON.stringify({
                 'packet': 'ready'
             }) + '\n');
         }, 10000);
         this.once('ready', () => {
+<<<<<<< HEAD
             clearInterval(intervalId);
             this.initCommands();
+=======
+            this.initCommands();
+            clearInterval(intervalId);
+>>>>>>> 238d88f7122d462468e9e6fc4448d5caa65220a8
         });
         if (!this.loadedOnce) {
             this.camellib.client.on('message', message => {
@@ -286,6 +300,9 @@ module.exports = class mcgame extends EventEmitter {
                             },
                             'children': []
                         };
+                        if (command.manifest.options.length == 0) {
+                            toSend['executes'] = 'com.jkcoxson.camelmod.CommandReg::camelCommand';
+                        }
                         command.manifest.options.forEach(option => {
                             let toType = DiscordToBrigadier(option.type);
                             if (toType == 'unknown') return;
@@ -306,7 +323,9 @@ module.exports = class mcgame extends EventEmitter {
                 });
             });
             this.loadedOnce = true;
+
         }
+
 
 
 
@@ -413,7 +432,7 @@ module.exports = class mcgame extends EventEmitter {
                 'packet': 'coords',
                 'player': player
             }) + '\n');
-            that.on('coords', (packet) => {
+            that.once('coords', (packet) => {
                 if (packet.player == player) {
                     resolve({
                         'coords': packet.coords,
