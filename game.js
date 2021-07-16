@@ -198,23 +198,14 @@ module.exports = class mcgame extends EventEmitter {
             this.camellib.client.channels.cache.get(this.logChannel).send('Server error, disconnected').catch(() => { });
             this.socket.removeAllListeners();
         });
-<<<<<<< HEAD
-
-=======
->>>>>>> 238d88f7122d462468e9e6fc4448d5caa65220a8
         let intervalId = setInterval(() => {
             this.socket.write(JSON.stringify({
                 'packet': 'ready'
             }) + '\n');
         }, 10000);
         this.once('ready', () => {
-<<<<<<< HEAD
             clearInterval(intervalId);
             this.initCommands();
-=======
-            this.initCommands();
-            clearInterval(intervalId);
->>>>>>> 238d88f7122d462468e9e6fc4448d5caa65220a8
         });
         if (!this.loadedOnce) {
             this.camellib.client.on('message', message => {
