@@ -204,8 +204,8 @@ module.exports = class mcgame extends EventEmitter {
             }) + '\n');
         }, 10000);
         this.once('ready', () => {
-            this.initCommands();
             clearInterval(intervalId);
+            this.initCommands();
         });
         if (!this.loadedOnce) {
             this.camellib.client.on('message', message => {
