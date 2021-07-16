@@ -169,6 +169,11 @@ module.exports = class mcgame extends EventEmitter {
                 if (packet.packet == 'players') {
                     this.emit('players', packet.players);
                 }
+                if (packet.packet == 'ready') {
+                    if (packet.ready) {
+                        this.emit('ready');
+                    }
+                }
             });
 
 
@@ -187,7 +192,15 @@ module.exports = class mcgame extends EventEmitter {
             this.camellib.client.channels.cache.get(this.logChannel).send('Server error, disconnected').catch(() => { });
             this.socket.removeAllListeners();
         });
-
+        let intervalId = setInterval(() => {
+            this.socket.write(JSON.stringify({
+                'packet': 'ready'
+            }) + '\n');
+        }, 10000);
+        this.once('ready', () => {
+            this.initCommands();
+            clearInterval(intervalId);
+        });
         if (!this.loadedOnce) {
             this.camellib.client.on('message', message => {
                 if (!this.connected) return;
@@ -272,6 +285,9 @@ module.exports = class mcgame extends EventEmitter {
                             },
                             'children': []
                         };
+                        if (command.manifest.options.length == 0) {
+                            toSend['executes'] = 'com.jkcoxson.camelmod.CommandReg::camelCommand';
+                        }
                         command.manifest.options.forEach(option => {
                             let toType = DiscordToBrigadier(option.type);
                             if (toType == 'unknown') return;
@@ -292,6 +308,7 @@ module.exports = class mcgame extends EventEmitter {
                 });
             });
             this.loadedOnce = true;
+
         }
 
 
@@ -399,7 +416,7 @@ module.exports = class mcgame extends EventEmitter {
                 'packet': 'coords',
                 'player': player
             }) + '\n');
-            that.on('coords', (packet) => {
+            that.once('coords', (packet) => {
                 if (packet.player == player) {
                     resolve({
                         'coords': packet.coords,

@@ -354,7 +354,7 @@ tcpServer.on('connection', client => {
                         'message': 'Connection verified'
                     }) + '\n');
                     server.initConnection();
-                    server.initCommands();
+                    // server.initCommands();
                     try {
                         camellib.client.channels.cache.get(server.logChannel).send('Server Connected').catch(() => { });
                     } catch (err) {
