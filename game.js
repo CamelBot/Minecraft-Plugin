@@ -169,6 +169,11 @@ module.exports = class mcgame extends EventEmitter {
                 if (packet.packet == 'players') {
                     this.emit('players', packet.players);
                 }
+                if (packet.packet == 'ready') {
+                    if (packet.ready) {
+                        this.emit('ready');
+                    }
+                }
             });
 
 
@@ -188,6 +193,15 @@ module.exports = class mcgame extends EventEmitter {
             this.socket.removeAllListeners();
         });
 
+        let intervalId = setInterval(() => {
+            this.socket.write(JSON.stringify({
+                'packet': 'ready'
+            }) + '\n');
+        }, 10000);
+        this.once('ready', () => {
+            clearInterval(intervalId);
+            this.initCommands();
+        });
         if (!this.loadedOnce) {
             this.camellib.client.on('message', message => {
                 if (!this.connected) return;
