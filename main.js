@@ -92,7 +92,7 @@ module.exports = class mineplug extends EventEmitter {
 
 
     }
-    
+
     /**@type {Array<mcgame>} */
     mcServers
 
@@ -389,19 +389,7 @@ tcpServer.on('connection', client => {
 
         }
 
-function generateKey(length){
-    // Declare all characters
-    let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-    // Pick characers randomly
-    let str = '';
-    for (let i = 0; i < length; i++) {
-        str += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-
-    return str;
-
-}
 
     });
 });

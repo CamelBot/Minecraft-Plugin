@@ -208,7 +208,7 @@ module.exports = class mcgame extends EventEmitter {
             this.initCommands();
         });
         if (!this.loadedOnce) {
-            this.camellib.client.on('message', message => {
+            this.camellib.client.on('messageCreate', message => {
                 if (!this.connected) return;
                 if (message.author == this.camellib.client.user) {
                     if (this.camellib.plugins.has('multiplexer') && message.channel.id == this.channel) {
