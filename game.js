@@ -97,7 +97,11 @@ module.exports = class mcgame extends EventEmitter {
             parsedPackets.forEach(packet => {
 
                 if (packet.packet == 'chat') {
-                    let tempObject = new chatMessage(packet.message, packet.sender, this);
+                    let color = 'white';
+                    if ('color' in packet) {
+                        color = packet.color;
+                    }
+                    let tempObject = new chatMessage(packet.message, packet.sender, color, this);
                     let cancel = false;
                     this.chatCallbacks.forEach(cb => {
                         /**@type {import('./chatCallback')} */
@@ -124,7 +128,7 @@ module.exports = class mcgame extends EventEmitter {
                         if (!tempObject.sendToMinecraft) return;
                         this.serverList.forEach(server => {
                             if (server.connected && server.channel == this.channel) {
-                                server.sendChat(message, packet.sender);
+                                server.sendChat(message, packet.sender, tempObject.color);
                             }
                         });
                     }
@@ -360,12 +364,20 @@ module.exports = class mcgame extends EventEmitter {
      * @param {String} message 
      * @param {String} sender 
      */
-    sendChat(message, sender) {
+    sendChat(message, sender, color = 'white') {
         message = message.replaceAll('"', '\'\'');
         let toSends = message.split('\n');
         this.socket.write(JSON.stringify({
             'packet': 'command',
-            'command': 'tellraw @a  {"text":"<' + sender + '> ' + toSends[0] + '"}'
+            'command': 'tellraw @a ' + JSON.stringify([
+                '<',
+                {
+                    'text': sender,
+                    'color': color
+                },
+                '> ',
+                toSends[0]
+            ])
         }) + '\n');
         toSends.shift();
         toSends.forEach(() => {
