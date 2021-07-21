@@ -1,5 +1,5 @@
 {
-    "name": "minecraft",
+    "name": "Minecraft",
     "description": "Official Minecraft plugin for linking chat and bootstrapping commands.",
     "class": "main.js",
     "commands": [
