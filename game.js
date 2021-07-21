@@ -6,8 +6,7 @@ const chatMessage = require('./chatMessage');
 const commandRunnerJs = require('./mcCommandRunner');
 
 
-/**@type {import('../../camelLib')} */
-let externalCamellib;
+
 
 module.exports = class mcgame extends EventEmitter {
 
@@ -35,7 +34,6 @@ module.exports = class mcgame extends EventEmitter {
         this.chatCallbacks = chatCallbacks;
         this.loadedOnce = false;
         this.lastSent = new Map();
-        externalCamellib = camellib;
 
         /**
          * @type {Map}
@@ -115,9 +113,15 @@ module.exports = class mcgame extends EventEmitter {
                     if (!cancel) {
                         if (this.lastSent.has(this.channel)) {
                             if (this.lastSent.get(this.channel) == packet.sender) {
-                                if (tempObject.sendToDiscord) this.camellib.client.channels.cache.get(this.channel).send(message);
+                                if (tempObject.sendToDiscord) {
+                                    this.camellib.client.channels.cache.get(this.channel).send(message);
+                                    this.camellib.emit('minecraftChatSent', message, packet.sender, this.channel);
+                                }
                             } else {
-                                if (tempObject.sendToDiscord) this.camellib.client.channels.cache.get(this.channel).send('__**' + packet.sender + '**__\n' + message);
+                                if (tempObject.sendToDiscord) {
+                                    this.camellib.client.channels.cache.get(this.channel).send('__**' + packet.sender + '**__\n' + message);
+                                    this.camellib.emit('minecraftChatSent', message, packet.sender, this.channel);
+                                }
                                 this.lastSent.set(this.channel, packet.sender);
 
                             }
@@ -138,11 +142,13 @@ module.exports = class mcgame extends EventEmitter {
                     if (packet.event == 'No player was found') return;
                     if (packet.event.endsWith('joined the game')) {
                         this.camellib.client.channels.cache.get(this.channel).send('**' + packet.event + '**').catch(() => { });
+                        this.camellib.emit('minecraftEventSent', packet.event, this.channel);
                         this.lastSent.set(this.channel, '[discord]');
                         return;
                     }
                     if (packet.event.endsWith('left the game')) {
                         this.camellib.client.channels.cache.get(this.channel).send('**' + packet.event + '**').catch(() => { });
+                        this.camellib.emit('minecraftEventSent', packet.event, this.channel);
                         this.lastSent.set(this.channel, '[discord]');
                         return;
                     }
@@ -156,6 +162,7 @@ module.exports = class mcgame extends EventEmitter {
                 }
                 if (packet.packet == 'death') {
                     this.camellib.client.channels.cache.get(this.channel).send('**' + packet.message + '**').catch(() => { });
+                    this.camellib.emit('minecraftEventSent', packet.message, this.channel);
                     this.lastSent.set(this.channel, '[discord]');
 
                 }
@@ -214,45 +221,11 @@ module.exports = class mcgame extends EventEmitter {
         if (!this.loadedOnce) {
             this.camellib.client.on('messageCreate', message => {
                 if (!this.connected) return;
-                if (message.author == this.camellib.client.user) {
-                    if (this.camellib.plugins.has('multiplexer') && message.channel.id == this.channel) {
-                        let that = this;
-                        setTimeout(function () {
-                            if (externalCamellib.plugins.get('multiplexer').class.multiplexedMessages.includes(message.id)) {
-                                externalCamellib.plugins.get('multiplexer').class.multihosts.forEach(multihost => {
-                                    if (multihost.channel.id == message.channel.id) {
-                                        let toSend = message.content;
-                                        let sender = multihost.lastSender;
-                                        if (toSend.startsWith('__**' + sender + '**__\n')) {
-                                            let toSendSplit = toSend.split('\n');
-                                            toSendSplit.shift();
-                                            toSend = toSendSplit.join('\n');
-                                        }
-                                        that.sendChat(toSend, sender);
-                                        return;
-                                    }
-                                    if (multihost.clients.has(message.channel.id)) {
-                                        let toSend = message.content;
-                                        let sender = multihost.clients.get(message.channel.id).lastSender;
-                                        if (toSend.startsWith('__**' + sender + '**__\n')) {
-                                            let toSendSplit = toSend.split('\n');
-                                            toSendSplit.shift();
-                                            toSend = toSendSplit.join('\n');
-                                        }
-                                        that.sendChat(toSend, sender);
-                                        return;
-                                    }
-                                });
-                            }
-                        }, 150);
-                    }
-                    return;
-                }
+                if (message.author == this.camellib.client.user) return;
                 if (message.channel.id == this.channel) {
                     this.lastSent.set(message.channel.id, '[discord]');
                     if (message.content.length > 0) {
                         this.sendChat(message.content, message.author.username);
-                        return;
                     }
                     if (message.attachments.size > 0) {
                         this.sendCommand('tellraw @a ' + JSON.stringify({
@@ -265,6 +238,16 @@ module.exports = class mcgame extends EventEmitter {
                 if (message.channel.id == this.logChannel && !message.author.bot) {
                     this.sendCommand(message.content);
                     return;
+                }
+            });
+            this.camellib.on('multiplexerMessage', (message, sender, channelId) => {
+                if (!this.connected) return;
+                if (channelId == this.channel) {
+                    this.lastSent.set(channelId, '[discord]');
+                    if (message.length > 0) {
+                        this.sendChat(message, sender);
+                        return;
+                    }
                 }
             });
 
